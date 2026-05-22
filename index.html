@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodExpress - Log In</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        .login-container h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #e65100;
+            text-align: center;
+        }
+        .login-container p {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+        .alert.error { background-color: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .alert.success { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #e65100;
+        }
+        .btn-login {
+            background-color: #e65100;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn-login:hover {
+            background-color: #bf4300;
+        }
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .footer-link a {
+            color: #e65100;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>FoodExpress 🍔</h2>
+        <p>Silakan masuk untuk mulai memesan makanan</p>
+        <div id="pesanNotif" class="alert"></div>
+        <form id="formLogin" onsubmit="prosesLogin(event)">
+            <div class="form-group">
+                <label for="email">Email atau Nomor HP</label>
+                <input type="text" id="email" placeholder="Masukkan email atau no. HP" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Masukkan password" required>
+            </div>
+            <button type="submit" class="btn-login">Masuk</button>
+        </form>
+        <div class="footer-link">
+            Belum punya akun? <a href="daftar.html">Daftar Sekarang</a>
+        </div>
+    </div>
+    <script>
+        if(localStorage.getItem("sesiPengguna")) {
+            window.location.href = "beranda.html";
+        }
+        function prosesLogin(event) {
+            event.preventDefault();
+            const inputIdentitas = document.getElementById('email').value.trim();
+            const inputPassword = document.getElementById('password').value.trim();
+            const kotakNotif = document.getElementById('pesanNotif');
+            kotakNotif.style.display = 'none';
+            kotakNotif.className = 'alert';
+            if (inputIdentitas === "" || inputPassword === "") {
+                tampilkanNotif(kotakNotif, "Harap isi semua kolom dengan benar!", "error");
+                return;
+            }
+            let databaseAkun = JSON.parse(localStorage.getItem('daftarAkun')) || [];
+            const penggunaDitemukan = databaseAkun.find(akun => akun.email === inputIdentitas && akun.password === inputPassword);
+            if (penggunaDitemukan) {
+                localStorage.setItem("sesiPengguna", JSON.stringify({ email: penggunaDitemukan.email }));
+                tampilkanNotif(kotakNotif, "✅ Login berhasil! Mengalihkan...", "success");
+                setTimeout(() => { window.location.href = "beranda.html"; }, 1000);
+            } else {
+                tampilkanNotif(kotakNotif, "❌ Akun tidak terdaftar atau Password salah!", "error");
+            }
+        }
+        function tampilkanNotif(elemen, teks, tipe) {
+            elemen.textContent = teks;
+            elemen.classList.add(tipe);
+            elemen.style.display = "block";
+        }
+    </script>
+</body>
+</html>

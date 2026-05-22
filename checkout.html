@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodExpress - Checkout</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            color: #333;
+            padding-bottom: 30px;
+        }
+
+        header {
+            background-color: #e65100;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        header h1 { margin: 0; font-size: 20px; }
+
+        .container {
+            max-width: 800px;
+            margin: 15px auto;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 14px;
+        }
+
+        .item-name { flex: 2; }
+        .item-qty { flex: 1; text-align: center; color: #777; }
+        .item-price { flex: 1; text-align: right; font-weight: 500; }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+            margin-top: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #e65100;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea { resize: vertical; min-height: 80px; }
+
+        .btn-submit {
+            width: 100%;
+            background-color: #25d366;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+        }
+
+        .btn-submit:hover {
+            background-color: #20b959;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="beranda.html" class="btn-back">←</a>
+        <h1>Checkout Pesanan</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-title">📋 Ringkasan Pesanan</div>
+            <div id="daftar-pesanan"></div>
+            <div class="total-row">
+                <span>Total Bayar</span>
+                <span id="total-bayar">Rp 0</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📍 Alamat Pengiriman</div>
+            <div class="form-group">
+                <label>Nama Penerima</label>
+                <input type="text" id="nama" placeholder="Masukkan nama lengkap" required>
+            </div>
+            <div class="form-group">
+                <label>Nomor HP / WhatsApp</label>
+                <input type="tel" id="telp" placeholder="Contoh: 08123456789" required>
+            </div>
+            <div class="form-group">
+                <label>Alamat Lengkap</label>
+                <textarea id="alamat" placeholder="Nama jalan, nomor rumah, RT/RW, patokan rumah" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Catatan Pesanan (Opsional)</label>
+                <textarea id="catatan" placeholder="Contoh: Jangan pakai cabai, dll"></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">💳 Metode Pembayaran</div>
+            <div class="form-group">
+                <select id="metode">
+                    <option value="COD">COD - Bayar di Tempat</option>
+                    <option value="Transfer">Transfer Bank</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="kirimPesan()">💬 Kirim Pesanan ke WhatsApp</button>
+        <p class="info-text">*Pastikan data alamat dan pesanan sudah benar sebelum dikirim</p>
+    </div>
+
+    <script>
+        // PENGAMAN: Cek Login
+        if(!localStorage.getItem("sesiPengguna")) {
+            window.location.href = "index.html";
+        }
+
+        // AMBIL DATA DARI BERANDA
+        let keranjang = JSON.parse(localStorage.getItem('keranjangBelanja')) || [];
+        let totalHarga = localStorage.getItem('totalBelanja') || 0;
+
+        // TAMPILKAN KE HALAMAN
+        let wadah = document.getElementById('daftar-pesanan');
+        if(keranjang.length === 0) {
+            wadah.innerHTML = "<p style='text-align:center; color:#999;'>Keranjang kosong, silakan belanja dulu.</p>";
+        } else {
+            keranjang.forEach(item => {
+                let baris = document.createElement('div');
+                baris.className = 'item-row';
+                baris.innerHTML = `
+                    <div class="item-name">${item.nama}</div>
+                    <div class="item-qty">1x</div>
+                    <div class="item-price">Rp ${item.harga.toLocaleString('id-ID')}</div>
+                `;
+                wadah.appendChild(baris);
+            });
+            document.getElementById('total-bayar').innerText = 'Rp ' + totalHarga.toLocaleString('id-ID');
+        }
+
+        // FUNGSI KIRIM KE WHATSAPP
+        function kirimPesan() {
+            // Ambil nilai input
+            let nama = document.getElementById('nama').value;
+            let telp = document.getElementById('telp').value;
+            let alamat = document.getElementById('alamat').value;
+            let catatan = document.getElementById('catatan').value || '-';
+            let metode = document.getElementById('metode').value;
+
+            // Validasi input wajib
+            if(!nama || !telp || !alamat || keranjang.length === 0) {
+                alert('Lengkapi data pesanan atau pastikan keranjang tidak kosong!');
+                return;
+            }
+
+            // Susun teks pesan
+            let teks = `*HALO, SAYA INGIN MEMESAN*%0A%0A`;
+            teks += `*DATA PEMBELI:*%0A`;
+            teks += `Nama: ${nama}%0A`;
+            teks += `No HP: ${telp}%0A`;
+            teks += `Alamat: ${alamat}%0A`;
+            teks += `Catatan: ${catatan}%0A`;
+            teks += `Metode Bayar: ${metode}%0A%0A`;
+
+            teks += `*RINCIAN PESANAN:*%0A`;
+            keranjang.forEach(item => {
+                teks += `- ${item.nama}  x1  (Rp ${item.harga.toLocaleString('id-ID')})%0A`;
+            });
+            teks += `------------------------------------%0A`;
+            teks += `*TOTAL BAYAR: Rp ${totalHarga.toLocaleString('id-ID')}*%0A`;
+
+            // GANTI NOMOR DI SINI DENGAN NOMOR KAMU, AWALI 62
+            let nomorTujuan = "6285180592417"; 
+
+            // Buka WhatsApp
+            window.open(`https://wa.me/${nomorTujuan}?text=${teks}`, '_blank');
+
+            // Bersihkan keranjang setelah pesan dikirim
+            localStorage.removeItem('keranjangBelanja');
+            localStorage.removeItem('totalBelanja');
+
+            // Kembali ke beranda
+            setTimeout(() => {
+                window.location.href = "beranda.html";
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>
